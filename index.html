@@ -1,0 +1,445 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>SmartLiving Property — Rental & Deposit</title>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Thai:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet" />
+<script src="https://cdnjs.cloudflare.com/ajax/libs/ethers/6.13.4/ethers.umd.min.js"></script>
+<style>
+  :root{
+    --bg:#f5f2ec; --panel:#fffdf9; --ink:#1f2a24; --muted:#6b736d; --line:#e3ddd2;
+    --green:#2f5d4a; --green-2:#e4eee8; --amber:#b7791f; --amber-2:#fbf0dc;
+    --red:#a8402f; --red-2:#f8e3de; --blue:#2c5a85; --blue-2:#e2ecf5; --gray-2:#ecebe7;
+    --radius:12px;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--ink);font-family:"IBM Plex Sans Thai",system-ui,sans-serif;font-size:15px;line-height:1.5}
+  .mono{font-family:"IBM Plex Mono",monospace;font-size:13px}
+  header{background:var(--green);color:#fff;padding:18px 28px;display:flex;flex-wrap:wrap;gap:16px;align-items:center;justify-content:space-between}
+  header h1{margin:0;font-size:20px;font-weight:700;letter-spacing:.2px}
+  header small{display:block;opacity:.75;font-weight:400;font-size:13px}
+  .conn{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+  .conn input{width:340px;max-width:60vw}
+  .pill{background:rgba(255,255,255,.14);padding:6px 12px;border-radius:999px;font-size:13px}
+  main{max-width:1280px;margin:0 auto;padding:24px;display:grid;grid-template-columns:360px 1fr;gap:24px}
+  @media(max-width:960px){main{grid-template-columns:1fr}}
+  .panel{background:var(--panel);border:1px solid var(--line);border-radius:var(--radius);padding:18px 20px;margin-bottom:20px}
+  .panel h2{margin:0 0 4px;font-size:16px}
+  .panel .sub{color:var(--muted);font-size:13px;margin:0 0 14px}
+  label{display:block;font-size:13px;color:var(--muted);margin:10px 0 4px}
+  input,textarea,select{width:100%;padding:9px 11px;border:1px solid var(--line);border-radius:8px;font:inherit;background:#fff;color:var(--ink)}
+  input:focus,textarea:focus{outline:2px solid var(--green-2);border-color:var(--green)}
+  textarea{min-height:64px;resize:vertical}
+  .row{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+  button{font:inherit;font-weight:600;border:0;border-radius:8px;padding:9px 14px;cursor:pointer;background:var(--green);color:#fff;transition:filter .15s}
+  button:hover{filter:brightness(1.1)} button:disabled{opacity:.5;cursor:not-allowed}
+  button.ghost{background:transparent;color:var(--green);border:1px solid var(--green)}
+  button.light{background:#fff;color:var(--green)}
+  button.warn{background:var(--amber)} button.danger{background:var(--red)} button.blue{background:var(--blue)}
+  button.sm{padding:6px 10px;font-size:13px}
+  .full{width:100%;margin-top:14px}
+  .stats{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:20px}
+  @media(max-width:700px){.stats{grid-template-columns:repeat(2,1fr)}}
+  .stat{background:var(--panel);border:1px solid var(--line);border-radius:var(--radius);padding:14px 16px}
+  .stat b{display:block;font-size:22px} .stat span{color:var(--muted);font-size:13px}
+  table{width:100%;border-collapse:collapse;font-size:14px}
+  th,td{text-align:left;padding:9px 8px;border-bottom:1px solid var(--line);vertical-align:top}
+  th{color:var(--muted);font-weight:500;font-size:12px;text-transform:uppercase;letter-spacing:.4px}
+  .badge{display:inline-block;padding:3px 10px;border-radius:999px;font-size:12px;font-weight:600;white-space:nowrap}
+  .b0{background:var(--amber-2);color:var(--amber)} .b1{background:var(--blue-2);color:var(--blue)}
+  .b2{background:var(--green-2);color:var(--green)} .b3{background:var(--amber-2);color:var(--amber)}
+  .b4{background:var(--blue-2);color:var(--blue)} .b5{background:var(--red-2);color:var(--red)}
+  .b6{background:var(--gray-2);color:#444} .b7{background:var(--gray-2);color:#888}
+  .tabs{display:flex;gap:6px;margin-bottom:14px;flex-wrap:wrap}
+  .tabs button{background:transparent;color:var(--muted);border:1px solid var(--line);font-weight:500}
+  .tabs button.on{background:var(--ink);color:#fff;border-color:var(--ink)}
+  .card{border:1px solid var(--line);border-radius:10px;padding:16px;margin-bottom:14px;background:#fff}
+  .card-h{display:flex;justify-content:space-between;align-items:flex-start;gap:12px;margin-bottom:10px}
+  .card-h h3{margin:0;font-size:16px}
+  .grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:8px 18px;font-size:14px}
+  .grid div span{display:block;color:var(--muted);font-size:12px}
+  .terms{background:var(--bg);border-radius:8px;padding:8px 12px;margin:10px 0;font-size:14px;white-space:pre-wrap}
+  .steps{display:flex;gap:4px;margin:12px 0}
+  .steps i{flex:1;height:5px;border-radius:3px;background:var(--line)} .steps i.done{background:var(--green)} .steps i.bad{background:var(--red)}
+  .actions{display:flex;flex-wrap:wrap;gap:8px;align-items:flex-end;margin-top:12px;padding-top:12px;border-top:1px dashed var(--line)}
+  .actions .f{display:flex;gap:6px;align-items:center;flex-wrap:wrap}
+  .actions input{width:auto;min-width:110px;padding:6px 9px;font-size:13px}
+  .note{font-size:13px;padding:8px 12px;border-radius:8px;margin-top:10px}
+  .note.info{background:var(--blue-2);color:var(--blue)} .note.warn{background:var(--amber-2);color:#7a4f10} .note.bad{background:var(--red-2);color:var(--red)} .note.ok{background:var(--green-2);color:var(--green)}
+  details{margin-top:10px} summary{cursor:pointer;color:var(--green);font-size:14px;font-weight:500}
+  .empty{color:var(--muted);text-align:center;padding:26px;font-size:14px}
+  .role{font-size:11px;font-weight:700;padding:2px 7px;border-radius:5px;margin-left:6px;vertical-align:middle}
+  .role.l{background:var(--green-2);color:var(--green)} .role.t{background:var(--blue-2);color:var(--blue)} .role.a{background:var(--red-2);color:var(--red)}
+  #toast{position:fixed;right:20px;bottom:20px;display:flex;flex-direction:column;gap:8px;z-index:50;max-width:380px}
+  .t{background:var(--ink);color:#fff;padding:11px 15px;border-radius:9px;font-size:14px;box-shadow:0 6px 20px rgba(0,0,0,.18)}
+  .t.err{background:var(--red)} .t.ok{background:var(--green)}
+  .log{max-height:420px;overflow:auto}
+  a{color:var(--blue)}
+</style>
+</head>
+<body>
+<header>
+  <h1>SmartLiving Property <small>Smart Property Rental &amp; Deposit Management</small></h1>
+  <div class="conn">
+    <input id="addr" class="mono" placeholder="วาง Contract Address ที่ Deploy จาก Remix (0x...)" />
+    <button class="light" id="btnLoad">โหลด Contract</button>
+    <button class="light" id="btnConnect">เชื่อมต่อ MetaMask</button>
+    <span class="pill mono" id="acct">ยังไม่เชื่อมต่อ</span>
+  </div>
+</header>
+
+<main>
+  <aside>
+    <div class="panel">
+      <h2>1. ลงทะเบียนห้องเช่า</h2>
+      <p class="sub">สำหรับเจ้าของห้อง — Wallet ที่ลงทะเบียนจะเป็นเจ้าของห้อง</p>
+      <label>ชื่อห้อง / อพาร์ตเมนต์</label><input id="pName" placeholder="เช่น ห้อง 101 อาคาร A" />
+      <label>ที่ตั้ง</label><input id="pLoc" placeholder="เช่น ลาดพร้าว 71 กรุงเทพฯ" />
+      <div class="row">
+        <div><label>ค่าเช่า / งวด (ETH)</label><input id="pRent" type="number" step="0.0001" placeholder="0.01" /></div>
+        <div><label>เงินประกัน (ETH)</label><input id="pDep" type="number" step="0.0001" placeholder="0.02" /></div>
+      </div>
+      <button class="full" id="btnRegister">ลงทะเบียนห้อง</button>
+    </div>
+
+    <div class="panel">
+      <h2>2. สร้างสัญญาเช่า</h2>
+      <p class="sub">เจ้าของห้องระบุผู้เช่า ระยะเวลา และเงื่อนไขสำคัญ</p>
+      <label>ห้อง (เฉพาะห้องว่างที่คุณเป็นเจ้าของ)</label><select id="aProp"><option value="">— เลือกห้อง —</option></select>
+      <label>Wallet ผู้เช่า</label><input id="aTenant" class="mono" placeholder="0x..." />
+      <div class="row">
+        <div><label>วันเริ่มต้น</label><input id="aStart" type="datetime-local" /></div>
+        <div><label>วันสิ้นสุด</label><input id="aEnd" type="datetime-local" /></div>
+      </div>
+      <label>เงื่อนไขสำคัญ</label><textarea id="aTerms" placeholder="เช่น ห้ามเลี้ยงสัตว์, ชำระค่าเช่าภายในวันที่ 5 ของทุกเดือน, หักเงินประกันตามความเสียหายจริง"></textarea>
+      <button class="full" id="btnCreate">สร้างสัญญา</button>
+    </div>
+  </aside>
+
+  <section>
+    <div class="stats">
+      <div class="stat"><b id="sProps">–</b><span>ห้องทั้งหมด</span></div>
+      <div class="stat"><b id="sAgr">–</b><span>สัญญาทั้งหมด</span></div>
+      <div class="stat"><b id="sActive">–</b><span>สัญญาที่มีผล</span></div>
+      <div class="stat"><b id="sBal">–</b><span>เงินประกันใน Contract (ETH)</span></div>
+    </div>
+
+    <div class="panel">
+      <div class="tabs" id="tabs">
+        <button data-t="agreements" class="on">สัญญาเช่า</button>
+        <button data-t="properties">ห้องเช่า</button>
+        <button data-t="history">ประวัติธุรกรรม</button>
+      </div>
+
+      <div id="t-agreements">
+        <div class="tabs" id="filter">
+          <button data-f="mine" class="on">เฉพาะที่เกี่ยวกับฉัน</button>
+          <button data-f="all">ทั้งหมด</button>
+          <button data-f="dispute">มีข้อพิพาท</button>
+        </div>
+        <div id="agrList"><div class="empty">เชื่อมต่อ MetaMask และโหลด Contract เพื่อเริ่มใช้งาน</div></div>
+      </div>
+
+      <div id="t-properties" hidden>
+        <table><thead><tr><th>#</th><th>ห้อง</th><th>เจ้าของ</th><th>ค่าเช่า</th><th>ประกัน</th><th>สถานะ</th></tr></thead><tbody id="propBody"></tbody></table>
+      </div>
+
+      <div id="t-history" hidden>
+        <p class="sub">อ่านจาก Event บน Blockchain — ตรวจสอบย้อนหลังได้ทุกรายการ</p>
+        <div class="log"><table><thead><tr><th>Block</th><th>เหตุการณ์</th><th>สัญญา/ห้อง</th><th>รายละเอียด</th></tr></thead><tbody id="histBody"></tbody></table></div>
+      </div>
+    </div>
+  </section>
+</main>
+<div id="toast"></div>
+
+<script>
+const ABI = [{"inputs":[],"stateMutability":"nonpayable","type":"constructor"},{"anonymous":false,"inputs":[{"indexed":true,"internalType":"uint256","name":"agreementId","type":"uint256"},{"indexed":true,"internalType":"address","name":"by","type":"address"}],"name":"AgreementCancelled","type":"event"},{"anonymous":false,"inputs":[{"indexed":true,"internalType":"uint256","name":"agreementId","type":"uint256"},{"indexed":true,"internalType":"address","name":"by","type":"address"}],"name":"AgreementConfirmed","type":"event"},{"anonymous":false,"inputs":[{"indexed":true,"internalType":"uint256","name":"agreementId","type":"uint256"},{"indexed":true,"internalType":"uint256","name":"propertyId","type":"uint256"},{"indexed":true,"internalType":"address","name":"tenant","type":"address"},{"indexed":false,"internalType":"address","name":"landlord","type":"address"},{"indexed":false,"internalType":"uint256","name":"startDate","type":"uint256"},{"indexed":false,"internalType":"uint256","name":"endDate","type":"uint256"}],"name":"AgreementCreated","type":"event"},{"anonymous":false,"inputs":[{"indexed":true,"internalType":"uint256","name":"agreementId","type":"uint256"},{"indexed":true,"internalType":"address","name":"by","type":"address"}],"name":"AgreementEnded","type":"event"},{"anonymous":false,"inputs":[{"indexed":true,"internalType":"uint256","name":"agreementId","type":"uint256"}],"name":"AgreementFullyConfirmed","type":"event"},{"anonymous":false,"inputs":[{"indexed":true,"internalType":"address","name":"oldArbitrator","type":"address"},{"indexed":true,"internalType":"address","name":"newArbitrator","type":"address"}],"name":"ArbitratorChanged","type":"event"},{"anonymous":false,"inputs":[{"indexed":true,"internalType":"uint256","name":"agreementId","type":"uint256"},{"indexed":true,"internalType":"address","name":"tenant","type":"address"},{"indexed":false,"internalType":"uint256","name":"amount","type":"uint256"}],"name":"DepositPaid","type":"event"},{"anonymous":false,"inputs":[{"indexed":true,"internalType":"uint256","name":"agreementId","type":"uint256"},{"indexed":false,"internalType":"uint256","name":"refundToTenant","type":"uint256"},{"indexed":false,"internalType":"uint256","name":"deductionToLandlord","type":"uint256"},{"indexed":true,"internalType":"address","name":"approvedBy","type":"address"}],"name":"DepositSettled","type":"event"},{"anonymous":false,"inputs":[{"indexed":true,"internalType":"uint256","name":"agreementId","type":"uint256"},{"indexed":true,"internalType":"address","name":"by","type":"address"},{"indexed":false,"internalType":"string","name":"reason","type":"string"}],"name":"DisputeRaised","type":"event"},{"anonymous":false,"inputs":[{"indexed":true,"internalType":"uint256","name":"agreementId","type":"uint256"},{"indexed":true,"internalType":"address","name":"arbitrator","type":"address"},{"indexed":false,"internalType":"uint256","name":"deduction","type":"uint256"},{"indexed":false,"internalType":"string","name":"resolution","type":"string"}],"name":"DisputeResolved","type":"event"},{"anonymous":false,"inputs":[{"indexed":true,"internalType":"uint256","name":"propertyId","type":"uint256"},{"indexed":true,"internalType":"address","name":"owner","type":"address"},{"indexed":false,"internalType":"string","name":"name","type":"string"},{"indexed":false,"internalType":"uint256","name":"rentAmount","type":"uint256"},{"indexed":false,"internalType":"uint256","name":"depositAmount","type":"uint256"}],"name":"PropertyRegistered","type":"event"},{"anonymous":false,"inputs":[{"indexed":true,"internalType":"uint256","name":"agreementId","type":"uint256"},{"indexed":false,"internalType":"uint256","name":"refundToTenant","type":"uint256"},{"indexed":false,"internalType":"uint256","name":"deduction","type":"uint256"},{"indexed":false,"internalType":"string","name":"reason","type":"string"}],"name":"RefundProposed","type":"event"},{"anonymous":false,"inputs":[{"indexed":true,"internalType":"uint256","name":"agreementId","type":"uint256"},{"indexed":true,"internalType":"address","name":"tenant","type":"address"},{"indexed":false,"internalType":"uint256","name":"period","type":"uint256"},{"indexed":false,"internalType":"uint256","name":"amount","type":"uint256"}],"name":"RentPaid","type":"event"},{"inputs":[{"internalType":"uint256","name":"id","type":"uint256"}],"name":"acceptRefund","outputs":[],"stateMutability":"nonpayable","type":"function"},{"inputs":[],"name":"agreementCount","outputs":[{"internalType":"uint256","name":"","type":"uint256"}],"stateMutability":"view","type":"function"},{"inputs":[],"name":"arbitrator","outputs":[{"internalType":"address","name":"","type":"address"}],"stateMutability":"view","type":"function"},{"inputs":[{"internalType":"uint256","name":"id","type":"uint256"}],"name":"cancelAgreement","outputs":[],"stateMutability":"nonpayable","type":"function"},{"inputs":[{"internalType":"uint256","name":"id","type":"uint256"}],"name":"confirmAgreement","outputs":[],"stateMutability":"nonpayable","type":"function"},{"inputs":[],"name":"contractBalance","outputs":[{"internalType":"uint256","name":"","type":"uint256"}],"stateMutability":"view","type":"function"},{"inputs":[{"internalType":"uint256","name":"propertyId","type":"uint256"},{"internalType":"address","name":"tenant","type":"address"},{"internalType":"uint256","name":"startDate","type":"uint256"},{"internalType":"uint256","name":"endDate","type":"uint256"},{"internalType":"string","name":"terms","type":"string"}],"name":"createAgreement","outputs":[{"internalType":"uint256","name":"id","type":"uint256"}],"stateMutability":"nonpayable","type":"function"},{"inputs":[{"internalType":"uint256","name":"id","type":"uint256"}],"name":"depositSecurity","outputs":[],"stateMutability":"payable","type":"function"},{"inputs":[{"internalType":"uint256","name":"id","type":"uint256"}],"name":"endAgreement","outputs":[],"stateMutability":"nonpayable","type":"function"},{"inputs":[{"internalType":"uint256","name":"id","type":"uint256"}],"name":"getAgreement","outputs":[{"components":[{"internalType":"uint256","name":"id","type":"uint256"},{"internalType":"uint256","name":"propertyId","type":"uint256"},{"internalType":"address","name":"landlord","type":"address"},{"internalType":"address","name":"tenant","type":"address"},{"internalType":"uint256","name":"rentAmount","type":"uint256"},{"internalType":"uint256","name":"depositAmount","type":"uint256"},{"internalType":"uint256","name":"startDate","type":"uint256"},{"internalType":"uint256","name":"endDate","type":"uint256"},{"internalType":"string","name":"terms","type":"string"},{"internalType":"bool","name":"landlordConfirmed","type":"bool"},{"internalType":"bool","name":"tenantConfirmed","type":"bool"},{"internalType":"uint256","name":"depositBalance","type":"uint256"},{"internalType":"uint256","name":"totalRentPaid","type":"uint256"},{"internalType":"enum SmartRental.Status","name":"status","type":"uint8"}],"internalType":"struct SmartRental.Agreement","name":"","type":"tuple"}],"stateMutability":"view","type":"function"},{"inputs":[{"internalType":"uint256","name":"id","type":"uint256"}],"name":"getDispute","outputs":[{"components":[{"internalType":"address","name":"raisedBy","type":"address"},{"internalType":"string","name":"reason","type":"string"},{"internalType":"uint256","name":"raisedAt","type":"uint256"},{"internalType":"bool","name":"resolved","type":"bool"},{"internalType":"string","name":"resolution","type":"string"}],"internalType":"struct SmartRental.Dispute","name":"","type":"tuple"}],"stateMutability":"view","type":"function"},{"inputs":[{"internalType":"uint256","name":"id","type":"uint256"}],"name":"getPayments","outputs":[{"components":[{"internalType":"uint256","name":"period","type":"uint256"},{"internalType":"uint256","name":"amount","type":"uint256"},{"internalType":"uint256","name":"paidAt","type":"uint256"}],"internalType":"struct SmartRental.Payment[]","name":"","type":"tuple[]"}],"stateMutability":"view","type":"function"},{"inputs":[{"internalType":"uint256","name":"id","type":"uint256"}],"name":"getProperty","outputs":[{"components":[{"internalType":"uint256","name":"id","type":"uint256"},{"internalType":"address","name":"owner","type":"address"},{"internalType":"string","name":"name","type":"string"},{"internalType":"string","name":"location","type":"string"},{"internalType":"uint256","name":"rentAmount","type":"uint256"},{"internalType":"uint256","name":"depositAmount","type":"uint256"},{"internalType":"bool","name":"available","type":"bool"}],"internalType":"struct SmartRental.Property","name":"","type":"tuple"}],"stateMutability":"view","type":"function"},{"inputs":[{"internalType":"uint256","name":"id","type":"uint256"}],"name":"getProposal","outputs":[{"components":[{"internalType":"uint256","name":"refundToTenant","type":"uint256"},{"internalType":"uint256","name":"deduction","type":"uint256"},{"internalType":"string","name":"reason","type":"string"},{"internalType":"address","name":"decidedBy","type":"address"},{"internalType":"uint256","name":"decidedAt","type":"uint256"}],"internalType":"struct SmartRental.RefundDecision","name":"","type":"tuple"}],"stateMutability":"view","type":"function"},{"inputs":[{"internalType":"uint256","name":"id","type":"uint256"}],"name":"getSettlement","outputs":[{"components":[{"internalType":"uint256","name":"refundToTenant","type":"uint256"},{"internalType":"uint256","name":"deduction","type":"uint256"},{"internalType":"string","name":"reason","type":"string"},{"internalType":"address","name":"decidedBy","type":"address"},{"internalType":"uint256","name":"decidedAt","type":"uint256"}],"internalType":"struct SmartRental.RefundDecision","name":"","type":"tuple"}],"stateMutability":"view","type":"function"},{"inputs":[{"internalType":"uint256","name":"id","type":"uint256"},{"internalType":"uint256","name":"period","type":"uint256"}],"name":"payRent","outputs":[],"stateMutability":"payable","type":"function"},{"inputs":[{"internalType":"uint256","name":"","type":"uint256"},{"internalType":"uint256","name":"","type":"uint256"}],"name":"periodPaid","outputs":[{"internalType":"bool","name":"","type":"bool"}],"stateMutability":"view","type":"function"},{"inputs":[],"name":"propertyCount","outputs":[{"internalType":"uint256","name":"","type":"uint256"}],"stateMutability":"view","type":"function"},{"inputs":[{"internalType":"uint256","name":"id","type":"uint256"},{"internalType":"uint256","name":"deduction","type":"uint256"},{"internalType":"string","name":"reason","type":"string"}],"name":"proposeRefund","outputs":[],"stateMutability":"nonpayable","type":"function"},{"inputs":[{"internalType":"uint256","name":"id","type":"uint256"},{"internalType":"string","name":"reason","type":"string"}],"name":"raiseDispute","outputs":[],"stateMutability":"nonpayable","type":"function"},{"inputs":[{"internalType":"string","name":"name","type":"string"},{"internalType":"string","name":"location","type":"string"},{"internalType":"uint256","name":"rentAmount","type":"uint256"},{"internalType":"uint256","name":"depositAmount","type":"uint256"}],"name":"registerProperty","outputs":[{"internalType":"uint256","name":"id","type":"uint256"}],"stateMutability":"nonpayable","type":"function"},{"inputs":[{"internalType":"uint256","name":"id","type":"uint256"},{"internalType":"uint256","name":"deduction","type":"uint256"},{"internalType":"string","name":"resolution","type":"string"}],"name":"resolveDispute","outputs":[],"stateMutability":"nonpayable","type":"function"},{"inputs":[{"internalType":"address","name":"newArbitrator","type":"address"}],"name":"setArbitrator","outputs":[],"stateMutability":"nonpayable","type":"function"},{"inputs":[{"internalType":"uint256","name":"propertyId","type":"uint256"},{"internalType":"uint256","name":"rentAmount","type":"uint256"},{"internalType":"uint256","name":"depositAmount","type":"uint256"}],"name":"updateProperty","outputs":[],"stateMutability":"nonpayable","type":"function"}];
+
+const STATUS = [
+  "รอยืนยันสัญญา", "ยืนยันแล้ว · รอฝากเงินประกัน", "สัญญามีผล", "สิ้นสุดสัญญา · รอตรวจห้อง",
+  "เสนอยอดคืนแล้ว · รอผู้เช่ายอมรับ", "มีข้อพิพาท · รอผู้มีอำนาจตัดสิน", "ปิดสัญญา · คืนเงินแล้ว", "ยกเลิก"
+];
+const $ = id => document.getElementById(id);
+const fmt = v => ethers.formatEther(v);
+const short = a => a ? a.slice(0, 6) + "…" + a.slice(-4) : "";
+const date = ts => new Date(Number(ts) * 1000).toLocaleString("th-TH", { dateStyle: "medium", timeStyle: "short" });
+const esc = s => String(s ?? "").replace(/[&<>"']/g, c => ({ "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;" }[c]));
+const same = (a, b) => a && b && a.toLowerCase() === b.toLowerCase();
+
+let provider, signer, account, contract, arbitrator;
+let props = [], agrs = [], filter = "mine";
+
+function toast(msg, kind = "") {
+  const el = document.createElement("div");
+  el.className = "t " + kind; el.textContent = msg;
+  $("toast").appendChild(el);
+  setTimeout(() => el.remove(), kind === "err" ? 7000 : 4000);
+}
+
+function errMsg(e) {
+  return e?.reason || e?.info?.error?.message || e?.shortMessage || e?.message || String(e);
+}
+
+// ---------- Connection ----------
+async function connect() {
+  if (!window.ethereum) { toast("ไม่พบ MetaMask — กรุณาติดตั้ง Extension ก่อน", "err"); return; }
+  provider = new ethers.BrowserProvider(window.ethereum);
+  await provider.send("eth_requestAccounts", []);
+  signer = await provider.getSigner();
+  account = await signer.getAddress();
+  const net = await provider.getNetwork();
+  $("acct").textContent = short(account) + " · chain " + net.chainId;
+  if ($("addr").value.trim()) await loadContract();
+}
+
+async function loadContract() {
+  const addr = $("addr").value.trim();
+  if (!ethers.isAddress(addr)) { toast("Contract Address ไม่ถูกต้อง", "err"); return; }
+  if (!signer) { await connect(); if (!signer) return; }
+  const code = await provider.getCode(addr);
+  if (code === "0x") { toast("ไม่พบ Contract ที่ Address นี้บนเครือข่ายที่ MetaMask เลือกอยู่", "err"); return; }
+  contract = new ethers.Contract(addr, ABI, signer);
+  try { localStorage.setItem("smartRentalAddr", addr); } catch (_) {}
+  arbitrator = await contract.arbitrator();
+  if (same(arbitrator, account)) $("acct").innerHTML = esc($("acct").textContent) + ' <span class="role a">ARBITRATOR</span>';
+  toast("โหลด Contract สำเร็จ", "ok");
+  await refresh();
+}
+
+async function send(label, fn) {
+  if (!contract) { toast("กรุณาโหลด Contract ก่อน", "err"); return; }
+  try {
+    toast(label + " — รอยืนยันใน MetaMask…");
+    const tx = await fn();
+    toast("ส่งธุรกรรมแล้ว รอ Block ยืนยัน…");
+    await tx.wait();
+    toast(label + " สำเร็จ ✓", "ok");
+    await refresh();
+    return true;
+  } catch (e) { toast(label + " ไม่สำเร็จ: " + errMsg(e), "err"); return false; }
+}
+
+// ---------- Data ----------
+async function refresh() {
+  if (!contract) return;
+  const [pc, ac, bal] = await Promise.all([contract.propertyCount(), contract.agreementCount(), contract.contractBalance()]);
+  props = await Promise.all(Array.from({ length: Number(pc) }, (_, i) => contract.getProperty(i + 1)));
+  agrs = await Promise.all(Array.from({ length: Number(ac) }, async (_, i) => {
+    const id = i + 1;
+    const [a, pays, prop, settle, disp] = await Promise.all([
+      contract.getAgreement(id), contract.getPayments(id), contract.getProposal(id),
+      contract.getSettlement(id), contract.getDispute(id)
+    ]);
+    return { a, pays, prop, settle, disp };
+  }));
+  $("sProps").textContent = props.length;
+  $("sAgr").textContent = agrs.length;
+  $("sActive").textContent = agrs.filter(x => Number(x.a.status) === 2).length;
+  $("sBal").textContent = fmt(bal);
+  renderProps(); renderAgrs(); renderHistory();
+}
+
+function renderProps() {
+  $("propBody").innerHTML = props.length ? props.map(p => `
+    <tr><td>${p.id}</td><td><b>${esc(p.name)}</b><br><small style="color:var(--muted)">${esc(p.location)}</small></td>
+    <td class="mono">${short(p.owner)}${same(p.owner, account) ? '<span class="role l">ฉัน</span>' : ""}</td>
+    <td>${fmt(p.rentAmount)} ETH</td><td>${fmt(p.depositAmount)} ETH</td>
+    <td><span class="badge ${p.available ? "b2" : "b6"}">${p.available ? "ว่าง" : "มีสัญญา"}</span></td></tr>`).join("")
+    : `<tr><td colspan="6" class="empty">ยังไม่มีห้องเช่า</td></tr>`;
+
+  const mine = props.filter(p => p.available && same(p.owner, account));
+  $("aProp").innerHTML = `<option value="">— เลือกห้อง —</option>` +
+    mine.map(p => `<option value="${p.id}">#${p.id} ${esc(p.name)} · ${fmt(p.rentAmount)} / ${fmt(p.depositAmount)} ETH</option>`).join("");
+}
+
+function stepBar(s) {
+  // Pending → Confirmed → Active → Ended → Closed
+  const order = { 0: 1, 1: 2, 2: 3, 3: 4, 4: 4, 5: 4, 6: 5, 7: 0 };
+  const n = order[s];
+  return `<div class="steps">${[1,2,3,4,5].map(i => `<i class="${s === 7 ? "bad" : i <= n ? "done" : ""}"></i>`).join("")}</div>`;
+}
+
+function renderAgrs() {
+  let list = agrs;
+  if (filter === "mine") list = agrs.filter(x => same(x.a.landlord, account) || same(x.a.tenant, account) || (same(arbitrator, account) && Number(x.a.status) === 5));
+  if (filter === "dispute") list = agrs.filter(x => Number(x.a.status) === 5 || x.disp.raisedBy !== ethers.ZeroAddress);
+  if (!list.length) { $("agrList").innerHTML = `<div class="empty">ไม่มีสัญญาในมุมมองนี้</div>`; return; }
+  $("agrList").innerHTML = list.slice().reverse().map(card).join("");
+}
+
+function card({ a, pays, prop, settle, disp }) {
+  const s = Number(a.status), id = Number(a.id);
+  const p = props.find(x => Number(x.id) === Number(a.propertyId));
+  const isL = same(a.landlord, account), isT = same(a.tenant, account), isA = same(arbitrator, account);
+  const now = Date.now() / 1000;
+  const nextPeriod = pays.length ? Math.max(...pays.map(x => Number(x.period))) + 1 : 1;
+
+  let acts = "", notes = "";
+  // 3. Confirm / cancel
+  if (s === 0) {
+    if ((isL && !a.landlordConfirmed) || (isT && !a.tenantConfirmed))
+      acts += `<button class="sm" onclick="act('confirm',${id})">ยืนยันยอมรับเงื่อนไข</button>`;
+  }
+  if ((s === 0 || s === 1) && (isL || isT)) acts += `<button class="sm ghost" onclick="act('cancel',${id})">ยกเลิกสัญญา</button>`;
+  // 4. Deposit
+  if (s === 1 && isT) acts += `<button class="sm blue" onclick="act('deposit',${id},'${a.depositAmount}')">ฝากเงินประกัน ${fmt(a.depositAmount)} ETH</button>`;
+  if (s === 1 && !isT) notes += `<div class="note info">รอผู้เช่าฝากเงินประกัน ${fmt(a.depositAmount)} ETH เข้า Smart Contract</div>`;
+  // 5. Rent
+  if (s === 2 && isT) acts += `<div class="f"><input type="number" min="1" id="per-${id}" value="${nextPeriod}" title="งวดที่" />
+      <button class="sm" onclick="act('rent',${id},'${a.rentAmount}')">ชำระค่าเช่า ${fmt(a.rentAmount)} ETH</button></div>`;
+  // 6. End
+  if (s === 2 && (isL || isT)) {
+    if (now >= Number(a.endDate)) acts += `<button class="sm warn" onclick="act('end',${id})">สิ้นสุดสัญญา (เข้าสู่การตรวจห้อง)</button>`;
+    else notes += `<div class="note info">สิ้นสุดสัญญาได้หลัง ${date(a.endDate)}</div>`;
+  }
+  // 6. Propose refund
+  if (s === 3 && isL) acts += `<div class="f"><input type="number" step="0.0001" min="0" id="ded-${id}" placeholder="ยอดหัก (ETH)" value="0" />
+      <input id="rsn-${id}" placeholder="เหตุผลการหัก (จำเป็นถ้าหัก)" style="min-width:220px" />
+      <button class="sm" onclick="act('propose',${id})">เสนอยอดคืนเงินประกัน</button></div>`;
+  if (s === 3 && !isL) notes += `<div class="note warn">รอเจ้าของห้องตรวจสภาพห้องและเสนอยอดคืนเงินประกัน</div>`;
+  if (s === 4) {
+    notes += `<div class="note warn">เจ้าของเสนอ: คืนผู้เช่า <b>${fmt(prop.refundToTenant)} ETH</b>, หัก <b>${fmt(prop.deduction)} ETH</b>${prop.reason ? " — เหตุผล: " + esc(prop.reason) : ""}</div>`;
+    if (isT) acts += `<button class="sm" onclick="act('accept',${id})">ยอมรับและรับเงินคืน</button>`;
+  }
+  // 7. Dispute
+  if ((s === 3 || s === 4) && (isL || isT)) acts += `<div class="f"><input id="dsp-${id}" placeholder="เหตุผลข้อพิพาท" style="min-width:200px" />
+      <button class="sm danger" onclick="act('dispute',${id})">แจ้งข้อพิพาท</button></div>`;
+  if (s === 5) {
+    notes += `<div class="note bad">ข้อพิพาทโดย ${isL && same(disp.raisedBy, account) || isT && same(disp.raisedBy, account) ? "คุณ" : short(disp.raisedBy)} — ${esc(disp.reason)}<br>
+      เงินประกันถูกล็อกไว้ ${fmt(a.depositBalance)} ETH จนกว่าผู้มีอำนาจจะตัดสิน</div>`;
+    if (isA) acts += `<div class="f"><input type="number" step="0.0001" min="0" id="rded-${id}" placeholder="ยอดหักให้เจ้าของ (ETH)" value="0" />
+        <input id="rres-${id}" placeholder="ผลการพิจารณา" style="min-width:220px" />
+        <button class="sm danger" onclick="act('resolve',${id})">บันทึกผลและปล่อยเงิน</button></div>`;
+  }
+  if (s === 6) notes += `<div class="note ok">คืนผู้เช่า <b>${fmt(settle.refundToTenant)} ETH</b> · หักให้เจ้าของ <b>${fmt(settle.deduction)} ETH</b>
+      ${settle.reason ? " — " + esc(settle.reason) : ""}<br><small>อนุมัติโดย ${short(settle.decidedBy)} เมื่อ ${date(settle.decidedAt)}</small>
+      ${disp.resolved ? `<br><small>ข้อพิพาทเดิม: ${esc(disp.reason)}</small>` : ""}</div>`;
+
+  const payRows = pays.length ? pays.map(x => `<tr><td>งวดที่ ${x.period}</td><td>${fmt(x.amount)} ETH</td><td>${date(x.paidAt)}</td></tr>`).join("")
+    : `<tr><td colspan="3" class="empty">ยังไม่มีการชำระค่าเช่า</td></tr>`;
+
+  return `<div class="card">
+    <div class="card-h"><div><h3>สัญญา #${id} · ${esc(p?.name ?? "ห้อง #" + a.propertyId)}
+      ${isL ? '<span class="role l">เจ้าของ</span>' : ""}${isT ? '<span class="role t">ผู้เช่า</span>' : ""}</h3>
+      <small style="color:var(--muted)">${esc(p?.location ?? "")}</small></div>
+      <span class="badge b${s}">${STATUS[s]}</span></div>
+    ${stepBar(s)}
+    <div class="grid">
+      <div><span>เจ้าของห้อง ${a.landlordConfirmed ? "✓" : "○"}</span><b class="mono">${short(a.landlord)}</b></div>
+      <div><span>ผู้เช่า ${a.tenantConfirmed ? "✓" : "○"}</span><b class="mono">${short(a.tenant)}</b></div>
+      <div><span>ระยะเวลา</span>${date(a.startDate)}<br>ถึง ${date(a.endDate)}</div>
+      <div><span>ค่าเช่า / งวด</span>${fmt(a.rentAmount)} ETH</div>
+      <div><span>เงินประกันคงเหลือ</span><b>${fmt(a.depositBalance)}</b> / ${fmt(a.depositAmount)} ETH</div>
+      <div><span>ค่าเช่าชำระแล้ว</span>${fmt(a.totalRentPaid)} ETH (${pays.length} งวด)</div>
+    </div>
+    ${a.terms ? `<div class="terms"><b>เงื่อนไข:</b> ${esc(a.terms)}</div>` : ""}
+    ${notes}
+    ${acts ? `<div class="actions">${acts}</div>` : ""}
+    <details><summary>ประวัติการชำระค่าเช่า (${pays.length})</summary>
+      <table><thead><tr><th>งวด</th><th>จำนวน</th><th>วันที่ชำระ</th></tr></thead><tbody>${payRows}</tbody></table></details>
+  </div>`;
+}
+
+async function act(kind, id, value) {
+  const c = contract;
+  const v = x => $(x + "-" + id).value.trim();
+  switch (kind) {
+    case "confirm": return send("ยืนยันสัญญา", () => c.confirmAgreement(id));
+    case "cancel":  return send("ยกเลิกสัญญา", () => c.cancelAgreement(id));
+    case "deposit": return send("ฝากเงินประกัน", () => c.depositSecurity(id, { value: BigInt(value) }));
+    case "rent":    return send("ชำระค่าเช่างวด " + v("per"), () => c.payRent(id, BigInt(v("per") || 0), { value: BigInt(value) }));
+    case "end":     return send("สิ้นสุดสัญญา", () => c.endAgreement(id));
+    case "propose": {
+      const d = ethers.parseEther(v("ded") || "0"), r = v("rsn");
+      if (d > 0n && !r) return toast("ต้องระบุเหตุผลเมื่อมีการหักเงินประกัน", "err");
+      return send("เสนอยอดคืนเงิน", () => c.proposeRefund(id, d, r));
+    }
+    case "accept":  return send("ยอมรับยอดคืนเงิน", () => c.acceptRefund(id));
+    case "dispute": {
+      const r = v("dsp"); if (!r) return toast("กรุณาระบุเหตุผลข้อพิพาท", "err");
+      return send("แจ้งข้อพิพาท", () => c.raiseDispute(id, r));
+    }
+    case "resolve": {
+      const d = ethers.parseEther(v("rded") || "0"), r = v("rres");
+      if (!r) return toast("กรุณาบันทึกผลการพิจารณา", "err");
+      return send("บันทึกผลข้อพิพาท", () => c.resolveDispute(id, d, r));
+    }
+  }
+}
+
+// ---------- History (events) ----------
+const EV = {
+  PropertyRegistered: e => ["ลงทะเบียนห้อง", "ห้อง #" + e.args.propertyId, `${esc(e.args.name)} · ค่าเช่า ${fmt(e.args.rentAmount)} · ประกัน ${fmt(e.args.depositAmount)} ETH`],
+  AgreementCreated: e => ["สร้างสัญญา", "#" + e.args.agreementId, `ห้อง #${e.args.propertyId} · ผู้เช่า ${short(e.args.tenant)}`],
+  AgreementConfirmed: e => ["ยืนยันสัญญา", "#" + e.args.agreementId, `โดย ${short(e.args.by)}`],
+  AgreementFullyConfirmed: e => ["ยืนยันครบทั้งสองฝ่าย", "#" + e.args.agreementId, ""],
+  AgreementCancelled: e => ["ยกเลิกสัญญา", "#" + e.args.agreementId, `โดย ${short(e.args.by)}`],
+  DepositPaid: e => ["ฝากเงินประกัน", "#" + e.args.agreementId, `${fmt(e.args.amount)} ETH`],
+  RentPaid: e => ["ชำระค่าเช่า", "#" + e.args.agreementId, `งวดที่ ${e.args.period} · ${fmt(e.args.amount)} ETH`],
+  AgreementEnded: e => ["สิ้นสุดสัญญา", "#" + e.args.agreementId, `โดย ${short(e.args.by)}`],
+  RefundProposed: e => ["เสนอยอดคืน", "#" + e.args.agreementId, `คืน ${fmt(e.args.refundToTenant)} · หัก ${fmt(e.args.deduction)} ETH ${esc(e.args.reason)}`],
+  DisputeRaised: e => ["แจ้งข้อพิพาท", "#" + e.args.agreementId, `${short(e.args.by)}: ${esc(e.args.reason)}`],
+  DisputeResolved: e => ["ตัดสินข้อพิพาท", "#" + e.args.agreementId, `หัก ${fmt(e.args.deduction)} ETH · ${esc(e.args.resolution)}`],
+  DepositSettled: e => ["คืนเงินประกัน", "#" + e.args.agreementId, `คืนผู้เช่า ${fmt(e.args.refundToTenant)} · ให้เจ้าของ ${fmt(e.args.deductionToLandlord)} ETH`],
+  ArbitratorChanged: e => ["เปลี่ยนผู้มีอำนาจ", "-", short(e.args.newArbitrator)],
+};
+
+async function renderHistory() {
+  try {
+    const logs = await contract.queryFilter("*", 0, "latest");
+    $("histBody").innerHTML = logs.length ? logs.slice().reverse().map(e => {
+      const f = EV[e.fragment?.name || e.eventName]; if (!f) return "";
+      const [t, ref, d] = f(e);
+      return `<tr><td class="mono">${e.blockNumber}</td><td><b>${t}</b></td><td>${ref}</td><td>${d}<br><small class="mono" style="color:var(--muted)">${short(e.transactionHash)}</small></td></tr>`;
+    }).join("") : `<tr><td colspan="4" class="empty">ยังไม่มีธุรกรรม</td></tr>`;
+  } catch (e) {
+    $("histBody").innerHTML = `<tr><td colspan="4" class="empty">อ่านประวัติไม่ได้จาก RPC นี้ (${esc(errMsg(e))}) — ตรวจสอบได้ที่ Block Explorer</td></tr>`;
+  }
+}
+
+// ---------- Forms ----------
+$("btnConnect").onclick = () => connect().catch(e => toast(errMsg(e), "err"));
+$("btnLoad").onclick = () => loadContract().catch(e => toast(errMsg(e), "err"));
+
+$("btnRegister").onclick = () => {
+  const n = $("pName").value.trim(), l = $("pLoc").value.trim(), r = $("pRent").value, d = $("pDep").value;
+  if (!n || !r || !d) return toast("กรอกชื่อห้อง ค่าเช่า และเงินประกันให้ครบ", "err");
+  send("ลงทะเบียนห้อง", () => contract.registerProperty(n, l, ethers.parseEther(r), ethers.parseEther(d)))
+    .then(ok => ok && ["pName","pLoc","pRent","pDep"].forEach(i => $(i).value = ""));
+};
+
+$("btnCreate").onclick = () => {
+  const pid = $("aProp").value, t = $("aTenant").value.trim();
+  const s = Math.floor(new Date($("aStart").value).getTime() / 1000), e = Math.floor(new Date($("aEnd").value).getTime() / 1000);
+  if (!pid) return toast("เลือกห้องก่อน", "err");
+  if (!ethers.isAddress(t)) return toast("Wallet ผู้เช่าไม่ถูกต้อง", "err");
+  if (!s || !e || e <= s) return toast("วันสิ้นสุดต้องหลังวันเริ่มต้น", "err");
+  send("สร้างสัญญา", () => contract.createAgreement(pid, t, s, e, $("aTerms").value.trim()));
+};
+
+document.querySelectorAll("#tabs button").forEach(b => b.onclick = () => {
+  document.querySelectorAll("#tabs button").forEach(x => x.classList.toggle("on", x === b));
+  ["agreements", "properties", "history"].forEach(t => $("t-" + t).hidden = t !== b.dataset.t);
+});
+document.querySelectorAll("#filter button").forEach(b => b.onclick = () => {
+  document.querySelectorAll("#filter button").forEach(x => x.classList.toggle("on", x === b));
+  filter = b.dataset.f; renderAgrs();
+});
+
+// defaults
+(() => {
+  const pad = d => new Date(d - new Date().getTimezoneOffset() * 60000).toISOString().slice(0, 16);
+  $("aStart").value = pad(Date.now());
+  $("aEnd").value = pad(Date.now() + 365 * 864e5);
+  try { const s = localStorage.getItem("smartRentalAddr"); if (s) $("addr").value = s; } catch (_) {}
+})();
+
+if (window.ethereum) {
+  window.ethereum.on?.("accountsChanged", () => connect().catch(() => {}));
+  window.ethereum.on?.("chainChanged", () => location.reload());
+}
+</script>
+</body>
+</html>
